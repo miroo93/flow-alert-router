@@ -14,11 +14,34 @@ interface StoredRoute extends Route {
 const VALID_SEVERITIES: ReadonlySet<string> = new Set(['critical', 'warning', 'info']);
 const VALID_BOOL_FILTERS: ReadonlySet<string> = new Set(['true', 'false']);
 
+export const INITIAL_STATS: Stats = {
+  total_alerts_processed: 0,
+  total_routed: 0,
+  total_suppressed: 0,
+  total_unrouted: 0,
+  by_severity: { critical: 0, warning: 0, info: 0 },
+  by_route: {},
+  by_service: {},
+};
+
+function freshStats(): Stats {
+  return {
+    total_alerts_processed: 0,
+    total_routed: 0,
+    total_suppressed: 0,
+    total_unrouted: 0,
+    by_severity: { critical: 0, warning: 0, info: 0 },
+    by_route: {},
+    by_service: {},
+  };
+}
+
 export function createStore(): InMemoryStore {
   const routes = new Map<string, StoredRoute>();
   const alerts = new Map<string, RoutingResult>();
   const suppressions = new Map<string, SuppressionRecord>();
   let insertionCounter = 0;
+  let stats: Stats = freshStats();
 
   const suppKey = (route_id: string, service: string): string => `${route_id}:${service}`;
 
@@ -77,10 +100,14 @@ export function createStore(): InMemoryStore {
       suppressions.set(suppKey(rec.route_id, rec.service), rec);
     },
     stats(): Stats {
-      throw new Error('not implemented');
+      return stats;
     },
     reset(): void {
-      throw new Error('not implemented');
+      routes.clear();
+      alerts.clear();
+      suppressions.clear();
+      insertionCounter = 0;
+      stats = freshStats();
     },
   };
 }
