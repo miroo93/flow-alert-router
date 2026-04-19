@@ -1,6 +1,6 @@
 import { buildApp } from './app.js';
 
-const app = buildApp();
+const { app } = buildApp();
 
 async function start() {
   try {

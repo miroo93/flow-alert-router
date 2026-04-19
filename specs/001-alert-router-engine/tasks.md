@@ -60,8 +60,8 @@ Each handler task begins with a failing `fastify.inject` integration test and en
 
 ### routes/routes.ts [US1]
 
-- [ ] T022 [P] [US1] TDD `tests/integration/routes.post.test.ts`: `POST /routes` with valid body → 201 `{id, created:true}`; re-post same id → 201 `{id, created:false}`; missing `priority` → 400 non-empty `error`; `target.type:"sms"` → 400; `active_hours.timezone:"Mars/Phobos"` → 400; `priority:3.5` → 400; `suppression_window_seconds:-1` → 400; webhook header value `{x:1}` → 400 — DoD `vitest run tests/integration/routes.post.test.ts` green [FR-001, FR-028, FR-030, FR-031, FR-031a, FR-032, FR-035, FR-036]. Depends: T009, T010.
-- [ ] T023 [US1] Implement `src/routes/routes.ts` `POST /routes`, `GET /routes`, `DELETE /routes/:id` to green T022 + new `tests/integration/routes.getdelete.test.ts` (GET returns `{routes:[]}` when empty, insertion order otherwise; DELETE unknown id → 404 `{"error":"route not found"}`) — DoD `curl -s -X POST :8080/routes -d @route.json` returns 201; `curl -s -X DELETE :8080/routes/nope -w '%{http_code}'` returns 404 [FR-002, FR-003]. Depends: T022.
+- [X] T022 [P] [US1] TDD `tests/integration/routes.post.test.ts`: `POST /routes` with valid body → 201 `{id, created:true}`; re-post same id → 201 `{id, created:false}`; missing `priority` → 400 non-empty `error`; `target.type:"sms"` → 400; `active_hours.timezone:"Mars/Phobos"` → 400; `priority:3.5` → 400; `suppression_window_seconds:-1` → 400; webhook header value `{x:1}` → 400 — DoD `vitest run tests/integration/routes.post.test.ts` green [FR-001, FR-028, FR-030, FR-031, FR-031a, FR-032, FR-035, FR-036]. Depends: T009, T010.
+- [X] T023 [US1] Implement `src/routes/routes.ts` `POST /routes`, `GET /routes`, `DELETE /routes/:id` to green T022 + new `tests/integration/routes.getdelete.test.ts` (GET returns `{routes:[]}` when empty, insertion order otherwise; DELETE unknown id → 404 `{"error":"route not found"}`) — DoD `curl -s -X POST :8080/routes -d @route.json` returns 201; `curl -s -X DELETE :8080/routes/nope -w '%{http_code}'` returns 404 [FR-002, FR-003]. Depends: T022.
 
 ### routes/alerts.ts [US2, US3, US4, US5, US6]
 

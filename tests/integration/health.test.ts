@@ -3,7 +3,7 @@ import { buildApp } from '../../src/app.js';
 
 describe('GET /health', () => {
   it('returns 200 {status:"ok"} in <50ms', async () => {
-    const app = buildApp();
+    const { app } = buildApp();
     try {
       const t0 = performance.now();
       const res = await app.inject({ method: 'GET', url: '/health' });
