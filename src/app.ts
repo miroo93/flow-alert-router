@@ -20,6 +20,20 @@ export function buildApp(): BuiltApp {
   });
   // Fastify 4 has X-Powered-By disabled by default; no extra step needed.
 
+  // T030: global error fallback. Any thrown exception → 500 {"error":"internal error"}.
+  // Client-caused errors Fastify tags with a 4xx statusCode (e.g. 413 body-too-large,
+  // 400 schema validation via throw) pass through unchanged. Real 500s log the raw
+  // error via app.log but MUST NOT leak the message or stack in the response body.
+  app.setErrorHandler((err, _request, reply) => {
+    const code = err.statusCode ?? 500;
+    if (code >= 500) {
+      app.log.error({ err }, 'unhandled exception');
+      return reply.code(500).send({ error: 'internal error' });
+    }
+    const msg = err.message && err.message.length > 0 ? err.message : 'bad request';
+    return reply.code(code).send({ error: msg });
+  });
+
   const store = createStore();
   const router = createRouter(store);
 
