@@ -1,4 +1,5 @@
 // Pure matcher — no store, no framework imports. See T021 boundary gate.
+import { DateTime } from 'luxon';
 import { minimatch } from 'minimatch';
 import type { Alert, Route, RouteConditions } from './types.js';
 
@@ -29,8 +30,16 @@ function matchesLabels(required: Record<string, string>, actual: Alert['labels']
   return true;
 }
 
-export function isWithinActiveHours(_route: Route, _alert: Alert): boolean {
-  throw new Error('not implemented');
+export function isWithinActiveHours(route: Route, alert: Alert): boolean {
+  const ah = route.active_hours;
+  if (!ah) return true;
+
+  // Parse the alert timestamp as an absolute instant (preserve offset if present),
+  // then re-zone to the route's IANA timezone. Compare HH:MM as strings —
+  // start inclusive, end exclusive.
+  const zoned = DateTime.fromISO(alert.timestamp, { setZone: true }).setZone(ah.timezone);
+  const hhmm = zoned.toFormat('HH:mm');
+  return hhmm >= ah.start && hhmm < ah.end;
 }
 
 export function matchesConditions(route: Route, alert: Alert): boolean {
