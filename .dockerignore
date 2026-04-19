@@ -1,0 +1,12 @@
+node_modules
+dist
+specs
+docs
+tests
+.git
+*.md
+.specify
+scripts
+.vscode
+.claude
+coverage
