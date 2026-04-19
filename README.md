@@ -82,6 +82,17 @@ These are contract-level — violating any of them fails the automated test suit
 grep -E "from '(fastify|\./routes)" src/matcher.ts src/router.ts && echo "VIOLATION" || echo "OK"
 ```
 
+## Known limitations
+
+Deferred hardening items documented for production migration (exercise scope is loopback-only).
+
+- **Per-request timeout covers async handlers only.** The 30 s budget (NFR-R-007) races the response against a timer; a synchronous CPU-bound handler cannot be interrupted on Node's single-threaded event loop. Proper preemption requires offloading to a worker-thread pool — deferred as a production-hardening task.
+- **Connection timeout** is set at the Fastify level (`connectionTimeout: 30_000`) as socket-level belt-and-braces.
+- **Unbounded alert history.** Alerts accumulate in an in-memory `Map` with no eviction policy (NFR-X-010). Add a TTL or bounded-cache strategy before production.
+- **Single-process, in-memory state.** All state is lost on restart; no replication, no persistence. The exercise spec requires this; production would move routes to durable storage (see the Kotlin/GCP design doc).
+- **No auth/TLS.** Loopback-only per exercise scope; expose behind a reverse proxy with IAM/mTLS before any external deployment.
+- **Logger omits bodies by default.** Pino is configured with default serializers — request/response bodies are never logged (verified by the `canary-xyz-7f3b` regression test, T035). If body-level debug logging is ever re-enabled, explicit `redact` paths for `alert.labels`, `route.target.headers`, etc. must be added first.
+
 ## Companion Design Doc — Kotlin + GCP
 
 The hiring company's production stack is **Kotlin + GCP**. [docs/kotlin-gcp-design.md](docs/kotlin-gcp-design.md) is a design-only (no implementation) deliverable describing what the equivalent system looks like on that substrate, preserving all semantics of the TypeScript submission.

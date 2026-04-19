@@ -13,12 +13,40 @@ export interface BuiltApp {
 }
 
 export function buildApp(): BuiltApp {
+  // T031: per-request timeout budget. Production default is 30 s (NFR-R-007);
+  // tests override via REQUEST_TIMEOUT_MS for CI speed.
+  const TIMEOUT_MS = Number.parseInt(process.env.REQUEST_TIMEOUT_MS ?? '', 10);
+  const requestTimeoutMs =
+    Number.isFinite(TIMEOUT_MS) && TIMEOUT_MS > 0 ? TIMEOUT_MS : 30_000;
+
   const app = Fastify({
     bodyLimit: 1_048_576,
     logger: { level: 'info' },
     disableRequestLogging: false,
+    // Socket-level belt-and-braces (NFR-R-007). Applies to real TCP sockets;
+    // fastify.inject() does not exercise this path.
+    connectionTimeout: 30_000,
   });
   // Fastify 4 has X-Powered-By disabled by default; no extra step needed.
+
+  // T031: arm a per-request timer on each incoming request. If the handler
+  // takes longer than the budget AND the reply is not yet sent, respond
+  // 503 {error:'request timed out'}. Cleared on normal completion.
+  // Caveat (documented in README "Known limitations" per NFR-R-007):
+  // this wrapper only interrupts ASYNC handlers. A synchronous CPU-bound
+  // handler cannot be preempted by Node's single-threaded event loop —
+  // proper interruption of those would require a worker-thread pool.
+  app.addHook('onRequest', (_request, reply, done) => {
+    const timer = setTimeout(() => {
+      if (!reply.sent) {
+        reply.code(503).send({ error: 'request timed out' });
+      }
+    }, requestTimeoutMs);
+    // Clear on successful send or connection close.
+    reply.raw.on('finish', () => clearTimeout(timer));
+    reply.raw.on('close', () => clearTimeout(timer));
+    done();
+  });
 
   // T030: global error fallback. Any thrown exception → 500 {"error":"internal error"}.
   // Client-caused errors Fastify tags with a 4xx statusCode (e.g. 413 body-too-large,
