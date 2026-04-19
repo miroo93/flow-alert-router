@@ -175,10 +175,12 @@ describe('areValidHeaderValues (FR-031a)', () => {
 });
 
 describe('hasDangerousKey (NFR-S-003 — prototype pollution guard)', () => {
-  it('flags own __proto__ key', () => {
-    expect(hasDangerousKey({ __proto__: 'x' } as Record<string, unknown>)).toBe(
-      true
-    );
+  it('flags own __proto__ key (as produced by JSON.parse)', () => {
+    // The literal `{ __proto__: 'x' }` sets the prototype instead of creating
+    // an own property, so it can't exercise this guard. A real attack vector
+    // is a JSON request body; JSON.parse preserves __proto__ as an own key.
+    const payload = JSON.parse('{"__proto__":"x"}') as Record<string, unknown>;
+    expect(hasDangerousKey(payload)).toBe(true);
   });
 
   it('flags constructor key', () => {
