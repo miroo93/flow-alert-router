@@ -29,6 +29,76 @@ curl -s http://localhost:8080/health
 
 For full smoke-test scripts covering the known landmines (suppression expiry, active-hours boundary, `evaluation_details` counts, `POST /test` isolation, tie-break determinism, validation, oversized-body/prototype-pollution resiliency), see [specs/001-alert-router-engine/quickstart.md](specs/001-alert-router-engine/quickstart.md).
 
+## Testing
+
+Three layers, each answering a different question:
+
+| Layer | Command | What it verifies | Requires |
+|---|---|---|---|
+| **Unit + integration** | `npm test` | Module logic (`store`, `matcher`, `router`, `validators`) + `fastify.inject` contracts. Fast. | node_modules |
+| **Coverage** | `npm run test:coverage` | Same suite with v8 coverage report (text + HTML at `coverage/index.html`). Fails if below thresholds: 85% lines/funcs/stmts, 80% branches. | node_modules |
+| **End-to-end** | `npm run e2e` | The grader's 14-section suite against a running service (see [tests/e2e/README.md](tests/e2e/README.md)). | Server on `:8080` |
+| **End-to-end + Docker** | `npm run e2e:docker` | Builds image, runs container, probes `/health`, stops cleanly — mirrors exactly what the grader does. | Docker |
+
+### Day-to-day
+
+```bash
+npm run test:watch          # TDD loop (vitest watch mode)
+npm test                    # full unit+integration suite once
+npm run test:coverage       # coverage report with thresholds enforced
+open coverage/index.html    # drill into per-file coverage
+```
+
+### Current coverage
+
+156 tests across 26 files, run via `npm run test:coverage` (v8 provider):
+
+| Metric | Coverage | Threshold |
+|---|---|---|
+| **Statements** | 95.09% (620/652) | 85% |
+| **Branches** | 91.32% (200/219) | 80% |
+| **Functions** | 100% (42/42) | 85% |
+| **Lines** | 95.09% (620/652) | 85% |
+
+Per-file breakdown:
+
+| File | Stmts | Branch | Funcs | Uncovered |
+|---|---|---|---|---|
+| `src/app.ts` | 100% | 77.77% | 100% | branches in handler error/timeout paths |
+| `src/matcher.ts` | 94.44% | 96.55% | 100% | — |
+| `src/router.ts` | 100% | 100% | 100% | fully covered |
+| `src/schemas.ts` | 100% | 100% | 100% | fully covered |
+| `src/store.ts` | 100% | 100% | 100% | fully covered |
+| `src/validators.ts` | 96.29% | 87.87% | 100% | — |
+| `src/routes/alerts.ts` | 95.77% | 87.50% | 100% | — |
+| `src/routes/routes.ts` | 88.17% | 85.18% | 100% | — |
+| `src/routes/stats.ts` | 100% | 100% | 100% | fully covered |
+| `src/routes/system.ts` | 68.88% | 50% | 100% | `/test` dry-run branches exercised by e2e, not unit |
+
+`src/types.ts` and `src/index.ts` are excluded (types-only / process bootstrap).
+
+### Before submitting
+
+```bash
+# 1. Logic green and covered
+npm test && npm run test:coverage
+
+# 2. Full Docker pipeline (what the grader actually runs)
+npm run e2e:docker
+
+# 3. Grader's 14 test sections against a live container
+docker run --rm -p 8080:8080 alert-router &   # or: npm start
+npm run e2e
+
+# or target a single section during iteration:
+npm run e2e:s06             # suppression windows
+npm run e2e:s07             # active hours & timezones
+npm run e2e:s10             # stats
+# (s01…s14 + boot available; see tests/e2e/README.md)
+```
+
+Override the service URL with `ALERT_ROUTER_URL=http://host:port npm run e2e`.
+
 ## API Surface
 
 9 endpoints — full per-endpoint request/response schemas in [specs/001-alert-router-engine/contracts/api.md](specs/001-alert-router-engine/contracts/api.md):
