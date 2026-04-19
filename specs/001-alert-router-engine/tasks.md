@@ -71,7 +71,7 @@ Each handler task begins with a failing `fastify.inject` integration test and en
 
 ### routes/stats.ts [US6]
 
-- [ ] T027 [P] [US6] TDD `tests/integration/stats.test.ts` + implement `GET /stats` in `src/routes/stats.ts` returning live `store.stats()` object — DoD fresh container: `curl :8080/stats` returns `{total_alerts_processed:0,total_routed:0,total_suppressed:0,total_unrouted:0,by_severity:{critical:0,warning:0,info:0},by_route:{},by_service:{}}`; after a routed alert, counters tick exactly once [FR-025, FR-025b]. Depends: T009, T013.
+- [X] T027 [P] [US6] TDD `tests/integration/stats.test.ts` + implement `GET /stats` in `src/routes/stats.ts` returning live `store.stats()` object — DoD fresh container: `curl :8080/stats` returns `{total_alerts_processed:0,total_routed:0,total_suppressed:0,total_unrouted:0,by_severity:{critical:0,warning:0,info:0},by_route:{},by_service:{}}`; after a routed alert, counters tick exactly once [FR-025, FR-025b]. Depends: T009, T013.
 
 ### routes/system.ts [US7, US8]
 
