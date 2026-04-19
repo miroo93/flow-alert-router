@@ -4,6 +4,7 @@ import type { InMemoryStore } from './types.js';
 import { createRouter } from './router.js';
 import routesPlugin from './routes/routes.js';
 import alertsPlugin from './routes/alerts.js';
+import statsPlugin from './routes/stats.js';
 
 export interface BuiltApp {
   app: FastifyInstance;
@@ -27,6 +28,8 @@ export function buildApp(): BuiltApp {
   app.register(routesPlugin, { store });
   // Stream B: alert ingest + query handlers.
   app.register(alertsPlugin, { store, router });
+  // Stream C: stats read handler.
+  app.register(statsPlugin, { store });
 
   return { app, store };
 }
