@@ -10,7 +10,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "vitest run",
-    "test:acceptance": "bash scripts/acceptance.sh"
+    "test:acceptance": "bash scripts/acceptance.sh",
+    "verify:phase4": "node scripts/verify-phase4.mjs"
   },
   "dependencies": {
     "fastify": "4.28.1",
