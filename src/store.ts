@@ -1,4 +1,3 @@
-// Stub for TDD Red phase — will be filled in green commits T010–T013.
 import type {
   Route,
   RoutingResult,
@@ -8,23 +7,34 @@ import type {
   InMemoryStore,
 } from './types.js';
 
+interface StoredRoute extends Route {
+  _insertionOrder: number;
+}
+
 export function createStore(): InMemoryStore {
+  const routes = new Map<string, StoredRoute>();
+  let insertionCounter = 0;
+
   return {
-    addRoute(_r: Route): { id: string; created: boolean } {
-      throw new Error('not implemented');
+    addRoute(r: Route): { id: string; created: boolean } {
+      const existing = routes.get(r.id);
+      const insertionOrder = existing ? existing._insertionOrder : insertionCounter++;
+      routes.set(r.id, { ...r, _insertionOrder: insertionOrder });
+      return { id: r.id, created: !existing };
     },
     listRoutes(): Route[] {
-      throw new Error('not implemented');
+      return [...routes.values()];
     },
-    getRoute(_id: string): Route | undefined {
-      throw new Error('not implemented');
+    getRoute(id: string): Route | undefined {
+      return routes.get(id);
     },
-    deleteRoute(_id: string): boolean {
-      throw new Error('not implemented');
+    deleteRoute(id: string): boolean {
+      return routes.delete(id);
     },
     routeCount(): number {
-      throw new Error('not implemented');
+      return routes.size;
     },
+
     upsertAlert(_r: RoutingResult): void {
       throw new Error('not implemented');
     },
