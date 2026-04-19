@@ -3,6 +3,14 @@
 **Branch**: `001-alert-router-engine` | **Date**: 2026-04-19 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/001-alert-router-engine/spec.md`
 
+## Status
+
+- **Phase 0 — Research**: ✅ complete (`research.md` committed in 5952f0f).
+- **Phase 1 — Scaffolding (T001–T009)**: ✅ complete. Three parallel sub-agents landed package/tsconfig/vitest/Dockerfile, `src/types.ts` (14 exports), and `src/validators.ts` + `src/schemas.ts` with 33 unit tests green. Health endpoint responds <50 ms via `fastify.inject`. Two TDD-surfaced edge cases recorded in commit history: luxon accepting lowercase `utc` (fixed with `Intl.DateTimeFormat` canonicalisation) and the ES2015 `{__proto__: ...}` literal being inert (test rewritten to use `JSON.parse` which models the real Fastify body-parse attack surface, commit `T007a`).
+- **Phase 2 — Kernel (T010–T021)**: ⏳ pending — sequential single agent, TDD per function.
+- **Phase 3 — HTTP handlers (T022–T035)**: ⏳ pending — four parallel streams once T021 grep gate passes.
+- **Phase 4 — Verification (T036–T046)**: ⏳ pending.
+
 ## Summary
 
 Single Dockerized HTTP service on port 8080 that ingests alerts, evaluates them against user-defined routing rules (severity/service-glob/group/labels + priority, suppression, active hours), and returns deterministic routing decisions. All state in-memory; `POST /reset` clears. Evaluated by a 70+ assertion curl/jq suite across 14 sections; container must start in ≤10 s.
