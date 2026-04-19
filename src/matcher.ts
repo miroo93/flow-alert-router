@@ -29,6 +29,10 @@ function matchesLabels(required: Record<string, string>, actual: Alert['labels']
   return true;
 }
 
+export function isWithinActiveHours(_route: Route, _alert: Alert): boolean {
+  throw new Error('not implemented');
+}
+
 export function matchesConditions(route: Route, alert: Alert): boolean {
   const c: RouteConditions = route.conditions;
 
