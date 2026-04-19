@@ -5,6 +5,7 @@ import { createRouter } from './router.js';
 import routesPlugin from './routes/routes.js';
 import alertsPlugin from './routes/alerts.js';
 import statsPlugin from './routes/stats.js';
+import systemPlugin from './routes/system.js';
 
 export interface BuiltApp {
   app: FastifyInstance;
@@ -30,6 +31,8 @@ export function buildApp(): BuiltApp {
   app.register(alertsPlugin, { store, router });
   // Stream C: stats read handler.
   app.register(statsPlugin, { store });
+  // Stream D: POST /test (dry run) + POST /reset.
+  app.register(systemPlugin, { store, router });
 
   return { app, store };
 }
