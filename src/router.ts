@@ -55,7 +55,8 @@ function perRoute(store: InMemoryStore, route_id: string): PerRouteStats {
 
 export function createRouter(store: InMemoryStore): Router {
   return {
-    evaluate(alert: Alert, _opts: EvaluateOptions = {}): RoutingResult {
+    evaluate(alert: Alert, opts: EvaluateOptions = {}): RoutingResult {
+      const dryRun = opts.dryRun === true;
       const matched = matchingRoutes(store, alert);
       const winner = matched[0];
       const totalRoutes = store.routeCount();
@@ -77,9 +78,10 @@ export function createRouter(store: InMemoryStore): Router {
               winner.id,
               existing.expires_at_iso,
             );
-          } else {
+          } else if (!dryRun) {
             // First non-suppressed alert for this (route, service) — start a new
             // window anchored at this alert's UTC-normalised timestamp.
+            // Skipped on dry-run: /test must not mutate suppression state.
             const expires_at_iso = addSecondsUTC(alert.timestamp, windowSeconds);
             store.setSuppression({
               route_id: winner.id,
@@ -108,6 +110,11 @@ export function createRouter(store: InMemoryStore): Router {
       };
       if (suppression_reason !== undefined) {
         result.suppression_reason = suppression_reason;
+      }
+
+      if (dryRun) {
+        // Dry-run short-circuits before any stats write — FR-026.
+        return result;
       }
 
       // Stats updates (FR-025a). Per-match total_matched for every matching
