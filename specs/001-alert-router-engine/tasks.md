@@ -40,7 +40,7 @@ Each kernel task = one Red → Green → Refactor cycle. No `[P]` within this ph
 
 ### matcher.ts
 
-- [ ] T014 TDD Red+Green `tests/unit/matcher.conditions.test.ts`: severity list match/no-match; service glob `payment-*` matches `payment-api` + `payment-worker`, excludes `auth-service`; `*-api` matches `payment-api` excludes `payment-worker`; group list match; labels subset match (alert superset OK, missing key rejects, wrong value rejects); omitted condition field = match all; `conditions:{}` = match all — DoD green [FR-009…014, NFR-S-004, S4]. Depends: T006, T008.
+- [X] T014 TDD Red+Green `tests/unit/matcher.conditions.test.ts`: severity list match/no-match; service glob `payment-*` matches `payment-api` + `payment-worker`, excludes `auth-service`; `*-api` matches `payment-api` excludes `payment-worker`; group list match; labels subset match (alert superset OK, missing key rejects, wrong value rejects); omitted condition field = match all; `conditions:{}` = match all — DoD green [FR-009…014, NFR-S-004, S4]. Depends: T006, T008.
 - [ ] T015 TDD Red+Green `tests/unit/matcher.activeHours.test.ts` using `luxon`: America/New_York 09:00–17:00 matches alert at `2026-04-20T13:00:00Z` (09:00 EDT, inclusive start); does NOT match `2026-04-20T21:00:00Z` (17:00 EDT, exclusive end); Asia/Tokyo cross-check; route without `active_hours` always active — DoD green [FR-021, FR-022, SC-005]. Depends: T014.
 
 ### router.ts
