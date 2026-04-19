@@ -4,7 +4,9 @@ const { app } = buildApp();
 
 async function start() {
   try {
-    await app.listen({ port: 8080, host: '0.0.0.0' });
+    const envPort = Number.parseInt(process.env.PORT ?? '', 10);
+    const port = Number.isFinite(envPort) && envPort > 0 ? envPort : 8080;
+    await app.listen({ port, host: '0.0.0.0' });
   } catch (err) {
     app.log.error(err);
     process.exit(1);
