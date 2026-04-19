@@ -2,7 +2,7 @@
 // No fastify / no handler imports — see T021 boundary gate.
 import { DateTime } from 'luxon';
 import { isWithinActiveHours, matchesConditions } from './matcher.js';
-import type { Alert, InMemoryStore, Route, RoutingResult } from './types.js';
+import type { Alert, InMemoryStore, PerRouteStats, Route, RoutingResult } from './types.js';
 
 export interface EvaluateOptions {
   dryRun?: boolean;
@@ -41,6 +41,16 @@ function addSecondsUTC(iso: string, seconds: number): string {
 function suppressionReason(service: string, route_id: string, expires_at_iso: string): string {
   // FR-015 exact template — do not change wording or quoting.
   return `Alert for service '${service}' on route '${route_id}' suppressed until ${expires_at_iso}`;
+}
+
+function perRoute(store: InMemoryStore, route_id: string): PerRouteStats {
+  const s = store.stats();
+  let entry = s.by_route[route_id];
+  if (!entry) {
+    entry = { total_matched: 0, total_routed: 0, total_suppressed: 0 };
+    s.by_route[route_id] = entry;
+  }
+  return entry;
 }
 
 export function createRouter(store: InMemoryStore): Router {
@@ -98,6 +108,28 @@ export function createRouter(store: InMemoryStore): Router {
       };
       if (suppression_reason !== undefined) {
         result.suppression_reason = suppression_reason;
+      }
+
+      // Stats updates (FR-025a). Per-match total_matched for every matching
+      // route (losers included); winner-specific counters; global totals;
+      // by_severity and by_service for every processed alert.
+      const stats = store.stats();
+      stats.total_alerts_processed += 1;
+      stats.by_severity[alert.severity] += 1;
+      stats.by_service[alert.service] = (stats.by_service[alert.service] ?? 0) + 1;
+      for (const m of matched) {
+        perRoute(store, m.id).total_matched += 1;
+      }
+      if (winner) {
+        if (suppressed) {
+          stats.total_suppressed += 1;
+          perRoute(store, winner.id).total_suppressed += 1;
+        } else {
+          stats.total_routed += 1;
+          perRoute(store, winner.id).total_routed += 1;
+        }
+      } else {
+        stats.total_unrouted += 1;
       }
 
       return result;
