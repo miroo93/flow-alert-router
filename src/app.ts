@@ -29,6 +29,18 @@ export function buildApp(): BuiltApp {
   });
   // Fastify 4 has X-Powered-By disabled by default; no extra step needed.
 
+  // T032: reject URLs/query strings > 2 KiB (NFR-S-002). Guards against
+  // DoS via absurdly long URIs without touching the body path.
+  const MAX_URL_BYTES = 2048;
+  app.addHook('onRequest', (request, reply, done) => {
+    const url = request.raw.url ?? '';
+    if (Buffer.byteLength(url, 'utf8') > MAX_URL_BYTES) {
+      reply.code(414).send({ error: 'request URI too long' });
+      return;
+    }
+    done();
+  });
+
   // T031: arm a per-request timer on each incoming request. If the handler
   // takes longer than the budget AND the reply is not yet sent, respond
   // 503 {error:'request timed out'}. Cleared on normal completion.
