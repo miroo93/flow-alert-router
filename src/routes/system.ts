@@ -62,6 +62,13 @@ const systemPlugin: FastifyPluginAsync<SystemDeps> = async (app, opts) => {
       return reply.code(200).send(stripInternalFields(result));
     },
   );
+
+  // --- POST /reset ----------------------------------------------------------
+  // FR-027: clears routes, alerts, suppressions, and stats. Empty body accepted.
+  app.post('/reset', async () => {
+    store.reset();
+    return { status: 'ok' };
+  });
 };
 
 export default systemPlugin;
