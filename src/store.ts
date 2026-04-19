@@ -17,7 +17,10 @@ const VALID_BOOL_FILTERS: ReadonlySet<string> = new Set(['true', 'false']);
 export function createStore(): InMemoryStore {
   const routes = new Map<string, StoredRoute>();
   const alerts = new Map<string, RoutingResult>();
+  const suppressions = new Map<string, SuppressionRecord>();
   let insertionCounter = 0;
+
+  const suppKey = (route_id: string, service: string): string => `${route_id}:${service}`;
 
   return {
     addRoute(r: Route): { id: string; created: boolean } {
@@ -67,11 +70,11 @@ export function createStore(): InMemoryStore {
         return true;
       });
     },
-    getSuppression(_route_id: string, _service: string): SuppressionRecord | undefined {
-      throw new Error('not implemented');
+    getSuppression(route_id: string, service: string): SuppressionRecord | undefined {
+      return suppressions.get(suppKey(route_id, service));
     },
-    setSuppression(_rec: SuppressionRecord): void {
-      throw new Error('not implemented');
+    setSuppression(rec: SuppressionRecord): void {
+      suppressions.set(suppKey(rec.route_id, rec.service), rec);
     },
     stats(): Stats {
       throw new Error('not implemented');
